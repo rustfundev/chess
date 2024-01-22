@@ -20,6 +20,15 @@ enum Square {
     Occupied(Piece),
 }
 
+#[derive(Debug)]
+enum Notation {
+    Pawn(char, u8, Option<char>),                // e4, e4+, e4#
+    Regular(char, char, u8, Option<char>),       // Nf3, Nf3+, Nf3#
+    Capture(char, char, char, u8, Option<char>), // Bxc6, Bxc6+, Bxc6#
+    ShortCastling(u8, char, u8),                 // 0-0
+    LongCastling(u8, char, u8, char, u8),        // 0-0-0
+}
+
 type Board = [[Square; 8]; 8];
 
 #[derive(Debug)]
@@ -27,26 +36,18 @@ struct Game {
     board: Board,
 }
 
-struct Move(String);
-
-impl Move {
-    fn from(&self) -> (usize, usize) {
-        (1, 0)
-    }
-    fn to(&self) -> (usize, usize) {
-        (2, 0)
-    }
-}
-
 impl Game {
-    fn play(&mut self, mov: Move) -> () {
-        let rank_from = mov.from().0;
-        let file_from = mov.from().1;
-        let rank_to = mov.to().0;
-        let file_to = mov.to().1;
-        println!("{:#?}", self.board[rank_to][file_to]);
-        self.board[rank_to][file_to] = self.board[rank_from][file_from];
-        self.board[rank_from][file_from] = Square::Empty;
+    fn play(&mut self, next_move: &str) -> () {
+        for c in next_move.chars() {
+            println!("{}", c as u8);
+        }
+
+        //       let rank_from = mov.from().0;
+        //       let file_from = mov.from().1;
+        //       let rank_to = mov.to().0;
+        //       let file_to = mov.to().1;
+        //       self.board[rank_to][file_to] = self.board[rank_from][file_from];
+        //       self.board[rank_from][file_from] = Square::Empty;
     }
     fn initialize(&mut self) -> () {
         self.board = [
@@ -139,6 +140,8 @@ fn main() {
         board: [[Square::Empty; 8]; 8],
     };
     game.initialize();
-    game.play(Move(String::from("h5")));
-    println!("{:#?}", game.board);
+    game.play("h5");
+    println!("{:#?}", Notation::Pawn('h', 5, None));
+    println!("{:#?}", Notation::Capture('N', 'x', 'f', 4, Some('+')));
+    println!("{:#?}", Notation::ShortCastling(0, '-', 0));
 }
