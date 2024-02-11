@@ -125,6 +125,11 @@ enum Notation {
         Option<NotationSymbol>,
         Option<NotationSymbol>,
     ),
+    PawnMoveCheckmate(
+        Option<NotationSymbol>,
+        Option<NotationSymbol>,
+        Option<NotationSymbol>,
+    ),
     Unknown,
 }
 
@@ -182,6 +187,25 @@ impl Notation {
                 file = v2;
             }
             return Notation::PawnMoveCheck(rank, file, Some(NotationSymbol::Check));
+        }
+
+        return Notation::Unknown;
+    }
+
+    fn pawn_move_checkmate(symbols: &[NotationSymbol]) -> Notation {
+        let pawn_move = Notation::pawn_move(&symbols[0..2]);
+        if matches!(pawn_move, Notation::Unknown) {
+            return Notation::Unknown;
+        }
+
+        if symbols.len() == 3 && matches!(symbols[2], NotationSymbol::Checkmate) {
+            let mut rank: Option<NotationSymbol> = None;
+            let mut file: Option<NotationSymbol> = None;
+            if let Notation::PawnMove(v1, v2) = pawn_move {
+                rank = v1;
+                file = v2;
+            }
+            return Notation::PawnMoveCheckmate(rank, file, Some(NotationSymbol::Checkmate));
         }
 
         return Notation::Unknown;
@@ -287,10 +311,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         board: [[Square::Empty; 8]; 8],
     };
     game.initialize();
-    let tokens = NotationSymbol::scan("h2+")?;
+    let tokens = NotationSymbol::scan("h2#")?;
     let pawn_move = &Notation::pawn_move;
     let pawn_move_check = &Notation::pawn_move_check;
-    let notations: Vec<&dyn Fn(&[NotationSymbol]) -> Notation> = vec![pawn_move, pawn_move_check];
+    let pawn_move_checkmate = &Notation::pawn_move_checkmate;
+    let notations: Vec<&dyn Fn(&[NotationSymbol]) -> Notation> =
+        vec![pawn_move, pawn_move_check, pawn_move_checkmate];
 
     let mut notation = Notation::Unknown;
     for f in notations.iter() {
