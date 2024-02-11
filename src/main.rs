@@ -1,3 +1,5 @@
+use std::collections::btree_set::Union;
+
 #[derive(Copy, Clone, Debug)]
 enum Color {
     White,
@@ -31,7 +33,7 @@ enum NotationSymbol {
     Knight,
     Capture,
     Check,
-    CheckMate,
+    Checkmate,
     A,
     B,
     C,
@@ -74,7 +76,7 @@ impl NotationSymbol {
                 'Q' => symbols.push(NotationSymbol::Queen),
                 'x' => symbols.push(NotationSymbol::Capture),
                 '+' => symbols.push(NotationSymbol::Check),
-                '#' => symbols.push(NotationSymbol::CheckMate),
+                '#' => symbols.push(NotationSymbol::Checkmate),
                 '-' => symbols.push(NotationSymbol::Minus),
                 '0' => symbols.push(NotationSymbol::Zero),
                 '1' => symbols.push(NotationSymbol::One),
@@ -102,6 +104,65 @@ impl NotationSymbol {
             return Err("invalid notation length".into());
         }
         Ok(symbols)
+    }
+}
+
+// N -> PAWN_MOVE |
+//      PAWN_MOVE_CAPTURE |
+//      PAWN_MOVE_CHECK |
+//      PAWN_MOVE_CHECKMATE |
+//      PAWN_MOVE_PROMOTION |
+//      OTHER_MOVE |
+//      OTHER_MOVE_CAPTURE |
+//      OTHER_MOVE_CHECK |
+//      OTHER_MOVE_CHECKMATE |
+//      CASTLING_KING_SIDE |
+//      CASTLING_QUEEN_SIDE
+
+#[derive(Debug)]
+enum Notation {
+    PawnMove(Option<NotationSymbol>, Option<NotationSymbol>),
+    Unknown,
+}
+
+impl Notation {
+    fn pawn_move(symbols: &Vec<NotationSymbol>) -> Notation {
+        if symbols.len() != 2 {
+            return Notation::Unknown;
+        }
+
+        let rank: Option<NotationSymbol>;
+        let file: Option<NotationSymbol>;
+
+        match symbols[0] {
+            NotationSymbol::A => rank = Some(NotationSymbol::A),
+            NotationSymbol::B => rank = Some(NotationSymbol::B),
+            NotationSymbol::C => rank = Some(NotationSymbol::C),
+            NotationSymbol::D => rank = Some(NotationSymbol::D),
+            NotationSymbol::E => rank = Some(NotationSymbol::E),
+            NotationSymbol::F => rank = Some(NotationSymbol::F),
+            NotationSymbol::G => rank = Some(NotationSymbol::G),
+            NotationSymbol::H => rank = Some(NotationSymbol::H),
+            _ => rank = None,
+        };
+
+        match symbols[1] {
+            NotationSymbol::One => file = Some(NotationSymbol::One),
+            NotationSymbol::Two => file = Some(NotationSymbol::Two),
+            NotationSymbol::Three => file = Some(NotationSymbol::Three),
+            NotationSymbol::Four => file = Some(NotationSymbol::Four),
+            NotationSymbol::Five => file = Some(NotationSymbol::Five),
+            NotationSymbol::Six => file = Some(NotationSymbol::Six),
+            NotationSymbol::Seven => file = Some(NotationSymbol::Seven),
+            NotationSymbol::Eight => file = Some(NotationSymbol::Eight),
+            _ => file = None,
+        };
+
+        if rank.is_none() || file.is_none() {
+            return Notation::Unknown;
+        }
+
+        Notation::PawnMove(rank, file)
     }
 }
 
@@ -204,7 +265,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         board: [[Square::Empty; 8]; 8],
     };
     game.initialize();
-    let tokens = NotationSymbol::scan("Q6xe6#")?;
-    println!("{:#?}", tokens);
+    let tokens = NotationSymbol::scan("a1")?;
+    let pawn_move = &Notation::pawn_move;
+    let notations: Vec<&dyn Fn(&Vec<NotationSymbol>) -> Notation> = vec![pawn_move];
+
+    let mut notation = Notation::Unknown;
+    notations.iter().for_each(|f| {
+        notation = f(&tokens);
+    });
+
+    println!("{:#?}", notation);
     Ok(())
 }
