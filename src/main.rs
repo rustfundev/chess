@@ -1,5 +1,3 @@
-use std::collections::btree_set::Union;
-
 #[derive(Copy, Clone, Debug)]
 enum Color {
     White,
@@ -122,11 +120,16 @@ impl NotationSymbol {
 #[derive(Debug)]
 enum Notation {
     PawnMove(Option<NotationSymbol>, Option<NotationSymbol>),
+    PawnMoveCheck(
+        Option<NotationSymbol>,
+        Option<NotationSymbol>,
+        Option<NotationSymbol>,
+    ),
     Unknown,
 }
 
 impl Notation {
-    fn pawn_move(symbols: &Vec<NotationSymbol>) -> Notation {
+    fn pawn_move(symbols: &[NotationSymbol]) -> Notation {
         if symbols.len() != 2 {
             return Notation::Unknown;
         }
@@ -163,6 +166,15 @@ impl Notation {
         }
 
         Notation::PawnMove(rank, file)
+    }
+
+    fn pawn_move_check(symbols: &[NotationSymbol]) -> Notation {
+        let sub_symbols = &symbols[0..2];
+        if matches!(Notation::pawn_move(sub_symbols), Notation::Unknown) {
+            return Notation::Unknown;
+        }
+
+        Notation::PawnMoveCheck(None, None, None)
     }
 }
 
@@ -267,13 +279,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     game.initialize();
     let tokens = NotationSymbol::scan("a1")?;
     let pawn_move = &Notation::pawn_move;
-    let notations: Vec<&dyn Fn(&Vec<NotationSymbol>) -> Notation> = vec![pawn_move];
+    let pawn_move_check = &Notation::pawn_move_check;
+    let notations: Vec<&dyn Fn(&[NotationSymbol]) -> Notation> = vec![pawn_move, pawn_move_check];
 
     let mut notation = Notation::Unknown;
-    notations.iter().for_each(|f| {
-        notation = f(&tokens);
-    });
-
+    for f in notations.iter() {
+        notation = f(&tokens[0..]);
+        if !matches!(notation, Notation::Unknown) {
+            break;
+        }
+    }
     println!("{:#?}", notation);
     Ok(())
 }
