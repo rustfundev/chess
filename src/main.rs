@@ -20,13 +20,89 @@ enum Square {
     Occupied(Piece),
 }
 
+const MAX_NOTATION_LENGTH: usize = 6;
+
 #[derive(Debug)]
-enum Notation {
-    Pawn(char, u8, Option<char>),                // e4, e4+, e4#
-    Regular(char, char, u8, Option<char>),       // Nf3, Nf3+, Nf3#
-    Capture(char, char, char, u8, Option<char>), // Bxc6, Bxc6+, Bxc6#
-    ShortCastling(u8, char, u8),                 // 0-0
-    LongCastling(u8, char, u8, char, u8),        // 0-0-0
+enum NotationSymbol {
+    King,
+    Queen,
+    Rook,
+    Bishop,
+    Knight,
+    Capture,
+    Check,
+    CheckMate,
+    A,
+    B,
+    C,
+    D,
+    E,
+    F,
+    G,
+    H,
+    Zero,
+    One,
+    Two,
+    Three,
+    Four,
+    Five,
+    Six,
+    Seven,
+    Eight,
+    Minus,
+}
+
+impl NotationSymbol {
+    fn scan(input: &str) -> Result<Vec<NotationSymbol>, Box<dyn std::error::Error>> {
+        let mut symbols: Vec<NotationSymbol> = Vec::new();
+        let mut invalid_symbol: bool = false;
+        let mut invalid_length: bool = false;
+        String::from(input).chars().for_each(|c| {
+            match c {
+                'a' => symbols.push(NotationSymbol::A),
+                'b' => symbols.push(NotationSymbol::B),
+                'c' => symbols.push(NotationSymbol::C),
+                'd' => symbols.push(NotationSymbol::D),
+                'e' => symbols.push(NotationSymbol::E),
+                'f' => symbols.push(NotationSymbol::F),
+                'g' => symbols.push(NotationSymbol::G),
+                'h' => symbols.push(NotationSymbol::H),
+                'B' => symbols.push(NotationSymbol::Bishop),
+                'N' => symbols.push(NotationSymbol::Knight),
+                'R' => symbols.push(NotationSymbol::Rook),
+                'K' => symbols.push(NotationSymbol::King),
+                'Q' => symbols.push(NotationSymbol::Queen),
+                'x' => symbols.push(NotationSymbol::Capture),
+                '+' => symbols.push(NotationSymbol::Check),
+                '#' => symbols.push(NotationSymbol::CheckMate),
+                '-' => symbols.push(NotationSymbol::Minus),
+                '0' => symbols.push(NotationSymbol::Zero),
+                '1' => symbols.push(NotationSymbol::One),
+                '2' => symbols.push(NotationSymbol::Two),
+                '3' => symbols.push(NotationSymbol::Three),
+                '4' => symbols.push(NotationSymbol::Four),
+                '5' => symbols.push(NotationSymbol::Five),
+                '6' => symbols.push(NotationSymbol::Six),
+                '7' => symbols.push(NotationSymbol::Seven),
+                '8' => symbols.push(NotationSymbol::Eight),
+                _ => invalid_symbol = true,
+            }
+            if symbols.len() > MAX_NOTATION_LENGTH {
+                invalid_length = true;
+            }
+
+            if invalid_symbol || invalid_length {
+                return ();
+            }
+        });
+        if invalid_symbol {
+            return Err("invalid notation symbol".into());
+        }
+        if invalid_length {
+            return Err("invalid notation length".into());
+        }
+        Ok(symbols)
+    }
 }
 
 type Board = [[Square; 8]; 8];
@@ -37,18 +113,6 @@ struct Game {
 }
 
 impl Game {
-    fn play(&mut self, next_move: &str) -> () {
-        for c in next_move.chars() {
-            println!("{}", c as u8);
-        }
-
-        //       let rank_from = mov.from().0;
-        //       let file_from = mov.from().1;
-        //       let rank_to = mov.to().0;
-        //       let file_to = mov.to().1;
-        //       self.board[rank_to][file_to] = self.board[rank_from][file_from];
-        //       self.board[rank_from][file_from] = Square::Empty;
-    }
     fn initialize(&mut self) -> () {
         self.board = [
             [
@@ -135,13 +199,12 @@ impl Game {
     }
 }
 
-fn main() {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut game = Game {
         board: [[Square::Empty; 8]; 8],
     };
     game.initialize();
-    game.play("h5");
-    println!("{:#?}", Notation::Pawn('h', 5, None));
-    println!("{:#?}", Notation::Capture('N', 'x', 'f', 4, Some('+')));
-    println!("{:#?}", Notation::ShortCastling(0, '-', 0));
+    let tokens = NotationSymbol::scan("Q6xe6#")?;
+    println!("{:#?}", tokens);
+    Ok(())
 }
