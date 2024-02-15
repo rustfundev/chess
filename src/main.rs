@@ -6,7 +6,7 @@ use notation::{Notation, NotationSymbol};
 
 use std::fs;
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+fn main() {
     let mut game = Game {
         board: [[Square::Empty; 8]; 8],
     };
@@ -42,6 +42,4 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .collect();
 
     println!("{:#?}", moves);
-
-    Ok(())
 }
