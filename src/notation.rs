@@ -112,6 +112,13 @@ pub enum Notation {
 }
 
 impl Notation {
+    pub fn moves<'a>() -> Vec<&'a dyn Fn(&[NotationSymbol]) -> Notation> {
+        vec![
+            &Notation::pawn_move,
+            &Notation::pawn_move_check,
+            &Notation::pawn_move_checkmate,
+        ]
+    }
     pub fn pawn_move(symbols: &[NotationSymbol]) -> Notation {
         if symbols.len() != 2 {
             return Notation::Unknown;
